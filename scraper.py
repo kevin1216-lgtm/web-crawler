@@ -55,7 +55,7 @@ def crawl_ltn(keyword):
         
     return results
 
-keyword = "軍情動向"
+keyword = "軍事衝突"
 all_news = []
 all_news.extend(crawl_china_times(keyword))
 all_news.extend(crawl_ltn(keyword))
