@@ -3,38 +3,36 @@ from bs4 import BeautifulSoup
 import datetime
 
 def crawl_china_times(keyword):
-    url = f"https://www.chinatimes.com/search/{keyword}?chdtv"
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Referer': 'https://www.google.com/',
-        'Connection': 'keep-alive'
-    }
+    # 🌟 絕招：利用 Google News 的 RSS 功能，指定只搜尋中時新聞網 (site:chinatimes.com)
+    url = f"https://news.google.com/rss/search?q=site:chinatimes.com+{keyword}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     res = requests.get(url, headers=headers)
     results = []
     
     if res.status_code == 200:
         soup = BeautifulSoup(res.text, 'html.parser')
-        items = soup.find_all('h3')
-        for item in items:
-            a_tag = item.find('a')
-            if a_tag and a_tag.get('href'):
-                title = a_tag.text.strip()
-                link = a_tag.get('href')
-                
-                if not link.startswith('http'):
-                    link = 'https://www.chinatimes.com' + link
-                    
-                if keyword in title:
-                    results.append(f"【中時】{title}\n🔗 {link}")
-                    
-        if len(results) == 0:
-            results.append(f"⚠️ 【中時】網頁連線成功，但目前沒有「{keyword}」的最新新聞。")
-    else:
-        results.append(f"❌ 【中時】連線失敗，可能被網站阻擋了 (狀態碼: {res.status_code})")
+        # Google News 的資料都放在 <item> 標籤裡面
+        items = soup.find_all('item')
         
-    return results
+        for item in items:
+            title_tag = item.find('title')
+            link_tag = item.find('link')
+            
+            if title_tag and link_tag:
+                title = title_tag.text
+                link = link_tag.text
+                
+                # Google News 抓出來的標題通常會附帶 "- 中時新聞網"，我們把它清掉讓版面好看點
+                clean_title = title.split(" - ")[0]
+                
+                results.append(f"【中時】{clean_title}\n🔗 {link}")
+                
+        if len(results) == 0:
+            results.append(f"⚠️ 【中時】連線成功，但 Google 尚未收錄「{keyword}」的最新新聞。")
+    else:
+        results.append(f"❌ 【中時】連線失敗 (狀態碼: {res.status_code})")
+        
+    return results 
     
 def crawl_ltn(keyword):
     url = f"https://search.ltn.com.tw/list?keyword={keyword}"
