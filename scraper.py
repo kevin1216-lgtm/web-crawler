@@ -67,7 +67,3 @@ output += "\n\n".join(all_news)
 
 with open('result.txt', 'w', encoding='utf-8') as f:
     f.write(output)
-with open('result.txt', 'w', encoding='utf-8') as f:
-    f.write(output_content)
-
-print("✅ 任務完成，結果已存入 result.txt")
