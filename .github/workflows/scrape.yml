@@ -16,7 +16,7 @@ jobs:
       with:
         python-version: '3.10'
 
-    - run: pip install requests beautifulsoup4
+    - run: pip install requests beautifulsoup4 lxml
 
     - env:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
