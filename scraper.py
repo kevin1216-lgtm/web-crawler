@@ -3,58 +3,70 @@ from bs4 import BeautifulSoup
 import datetime
 
 def crawl_china_times(keyword):
-    # 中時搜尋網址
     url = f"https://www.chinatimes.com/search/{keyword}?chdtv"
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
     res = requests.get(url, headers=headers)
     results = []
+    
     if res.status_code == 200:
         soup = BeautifulSoup(res.text, 'html.parser')
-        # 抓取搜尋結果的標題區塊
-        items = soup.find_all('h3', class_='title')
+        items = soup.find_all('h3')
         for item in items:
-            title = item.text.strip()
-            link = item.find('a')['href']
-            results.append(f"【中時】{title}\n🔗 {link}")
+            a_tag = item.find('a')
+            if a_tag and a_tag.get('href'):
+                title = a_tag.text.strip()
+                link = a_tag.get('href')
+                
+                if not link.startswith('http'):
+                    link = 'https://www.chinatimes.com' + link
+                    
+                if keyword in title:
+                    results.append(f"【中時】{title}\n🔗 {link}")
+                    
+        if len(results) == 0:
+            results.append(f"⚠️ 【中時】網頁連線成功，但目前沒有「{keyword}」的最新新聞。")
+    else:
+        results.append(f"❌ 【中時】連線失敗，可能被網站阻擋了 (狀態碼: {res.status_code})")
+        
     return results
 
 def crawl_ltn(keyword):
-    # 自由時報搜尋網址
     url = f"https://search.ltn.com.tw/list?keyword={keyword}"
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
     res = requests.get(url, headers=headers)
     results = []
+    
     if res.status_code == 200:
         soup = BeautifulSoup(res.text, 'html.parser')
-        # 自由時報搜尋結果放在特定的 ul > li 裡
         items = soup.select('ul.list > li')
         for item in items:
             a_tag = item.find('a', class_='tit')
             if a_tag:
                 title = a_tag.text.strip()
-                link = a_tag['href']
-                results.append(f"【自由】{title}\n🔗 {link}")
+                link = a_tag.get('href')
+                
+                if keyword in title:
+                    results.append(f"【自由】{title}\n🔗 {link}")
+                    
+        if len(results) == 0:
+            results.append(f"⚠️ 【自由】網頁連線成功，但目前沒有「{keyword}」的最新新聞。")
+    else:
+        results.append(f"❌ 【自由】連線失敗，可能被網站阻擋了 (狀態碼: {res.status_code})")
+        
     return results
 
-# 主程式
-keyword = "軍事衝突"
-print(f"開始搜尋關鍵字：{keyword}")
-
+keyword = "軍情動向"
 all_news = []
 all_news.extend(crawl_china_times(keyword))
 all_news.extend(crawl_ltn(keyword))
 
-# 格式化輸出內容
-output_content = f"🕒 更新時間：{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-output_content += f"🔎 關鍵字：{keyword}\n"
-output_content += "="*30 + "\n"
+output = f"🕒 自動更新時間：{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+output += f"🔎 監控關鍵字：{keyword}\n"
+output += "="*30 + "\n\n"
+output += "\n\n".join(all_news)
 
-if all_news:
-    output_content += "\n\n".join(all_news)
-else:
-    output_content += "目前未找到相關新聞。"
-
-# 儲存結果
+with open('result.txt', 'w', encoding='utf-8') as f:
+    f.write(output)
 with open('result.txt', 'w', encoding='utf-8') as f:
     f.write(output_content)
 
