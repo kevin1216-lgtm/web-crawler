@@ -1,37 +1,31 @@
 name: Auto News Scraper
 
-# 1. 設定何時觸發 (鬧鐘)
 on:
   schedule:
-    # 這裡使用 Cron 語法。 '0 * * * *' 代表「每個小時的第 0 分鐘」自動執行一次
     - cron: '0 * * * *'
-  workflow_dispatch: # 加上這個，讓你可以隨時在網頁上手動按按鈕測試
+  workflow_dispatch:
 
-# 2. 設定機器人要做的事情
 jobs:
   build:
-    runs-on: ubuntu-latest # 使用最新的 Linux 雲端電腦
+    runs-on: ubuntu-latest
 
     steps:
-    - name: 📥 把程式碼載入到雲端電腦
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    - name: 🐍 安裝 Python 環境
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.10'
 
-    - name: 📦 安裝爬蟲需要的套件
-      run: pip install -r requirements.txt
+    - run: pip install requests beautifulsoup4
 
-    - name: 🚀 執行爬蟲程式！
+    - env:
+        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        DATABASE_ID: ${{ secrets.DATABASE_ID }}
       run: python scraper.py
 
-    - name: 💾 把抓到的結果 (result.txt) 存回 GitHub
-      run: |
+    - run: |
         git config --global user.name "GitHub Action Bot"
         git config --global user.email "action@github.com"
         git add result.txt
-        # 如果檔案有更新就 commit 並 push，如果沒更新就跳過
-        git commit -m "自動更新爬蟲結果" || exit 0
+        git commit -m "Auto-update result.txt" || exit 0
         git push
