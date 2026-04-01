@@ -102,7 +102,7 @@ if new_news:
     output += "="*30 + "\n\n"
     
     # 只記錄最近的 50 筆，避免檔案無限長大
-    for news in total_news[-400:]:
+    for news in total_news[-500:]:
         output += f"【{news['source']}】{news['title']}\n🔗 {news['link']}\n\n"
     
     output += "▼"*30 + "\n\n"
