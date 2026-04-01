@@ -1,10 +1,11 @@
+import os
 import requests
 import json
 from datetime import datetime
 from bs4 import BeautifulSoup
 
-NOTION_TOKEN = "您的_Internal_Integration_Secret"
-DATABASE_ID = "您的_Database_ID"
+NOTION_TOKEN = os.environ.get("NOTION_TOKEN")
+DATABASE_ID = os.environ.get("DATABASE_ID")
 
 notion_headers = {
     "Authorization": "Bearer " + NOTION_TOKEN,
