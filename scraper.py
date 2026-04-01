@@ -1,10 +1,10 @@
 import os
 import requests
 import json
+import re
 from datetime import datetime
 from bs4 import BeautifulSoup
 
-# --- 環境變數讀取 ---
 NOTION_TOKEN = os.environ.get("NOTION_TOKEN")
 DATABASE_ID = os.environ.get("DATABASE_ID")
 
@@ -14,14 +14,28 @@ notion_headers = {
     "Notion-Version": "2022-06-28"
 }
 
-# 讀取舊紀錄：確保不會重複抓取
-def get_existing_history():
+def get_existing_data():
+    """從檔案中提取舊新聞標題與網址，用來去重"""
     if not os.path.exists('result.txt'):
-        return ""
+        return []
+    
     with open('result.txt', 'r', encoding='utf-8') as f:
-        return f.read()
+        content = f.read()
+    
+    # 使用正規表達式抓取標題與網址
+    # 格式：【來源】標題 \n 🔗 網址
+    pattern = r"【(?P<source>.*?)】(?P<title>.*?)\n🔗 (?P<link>https?://[^\s\n]+)"
+    matches = re.finditer(pattern, content)
+    
+    existing_news = []
+    for m in matches:
+        existing_news.append({
+            "source": m.group("source"),
+            "title": m.group("title").strip(),
+            "link": m.group("link").strip()
+        })
+    return existing_news
 
-# 新增至 Notion：保留狀態碼回傳，方便日後擴充報錯功能
 def add_to_notion(title, link, source):
     url = "https://api.notion.com/v1/pages"
     data = {
@@ -33,72 +47,69 @@ def add_to_notion(title, link, source):
             "Date": { "date": {"start": datetime.now().isoformat()} }
         }
     }
-    response = requests.post(url, headers=notion_headers, json=data)
-    return response.status_code
+    res = requests.post(url, headers=notion_headers, json=data)
+    if res.status_code != 200:
+        # 如果失敗，會在 GitHub Actions 的日誌中印出錯誤訊息
+        print(f"❌ Notion 傳送失敗！狀態碼: {res.status_code}, 原因: {res.text}")
+    return res.status_code
 
-def crawl_china_times(keyword, history):
-    # 使用 Google News RSS 比較穩定
-    url = f"https://news.google.com/rss/search?q=site:chinatimes.com+{keyword}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
-    # 完整的 User-Agent 降低被封鎖機率
-    req_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
-    res = requests.get(url, headers=req_headers)
-    results = []
+def crawl_news(keyword, existing_links):
+    new_found = []
     
-    if res.status_code == 200:
-        soup = BeautifulSoup(res.text, 'html.parser')
-        items = soup.find_all('item')
-        for item in items:
-            title_tag = item.find('title')
-            link_tag = item.find('link')
-            if title_tag and link_tag:
-                link = link_tag.text
-                # 檢查重複：如果網址已存在則跳過
-                if link in history:
-                    continue
-                # 乾淨標題處理
-                clean_title = title_tag.text.split(" - ")[0]
-                results.append(f"【中時】{clean_title}\n🔗 {link}")
-                add_to_notion(clean_title, link, "中時")
-    return results 
+    # 1. 中時新聞 (透過 Google RSS)
+    ct_url = f"https://news.google.com/rss/search?q=site:chinatimes.com+{keyword}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
+    res_ct = requests.get(ct_url, headers={'User-Agent': 'Mozilla/5.0'})
+    if res_ct.status_code == 200:
+        soup = BeautifulSoup(res_ct.text, 'xml')
+        for item in soup.find_all('item'):
+            title = item.title.text.split(" - ")[0]
+            link = item.link.text
+            if link not in existing_links:
+                new_found.append({"source": "中時", "title": title, "link": link})
+                add_to_notion(title, link, "中時")
 
-def crawl_ltn(keyword, history):
-    url = f"https://search.ltn.com.tw/list?keyword={keyword}"
-    req_headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
-    res = requests.get(url, headers=req_headers)
-    results = []
-    
-    if res.status_code == 200:
-        soup = BeautifulSoup(res.text, 'html.parser')
-        items = soup.select('ul.list > li')
-        for item in items:
+    # 2. 自由時報
+    ltn_url = f"https://search.ltn.com.tw/list?keyword={keyword}"
+    res_ltn = requests.get(ltn_url, headers={'User-Agent': 'Mozilla/5.0'})
+    if res_ltn.status_code == 200:
+        soup = BeautifulSoup(res_ltn.text, 'html.parser')
+        for item in soup.select('ul.list > li'):
             a_tag = item.find('a', class_='tit')
             if a_tag:
                 title = a_tag.text.strip()
                 link = a_tag.get('href')
-                # 檢查關鍵字與重複性
-                if keyword in title and link not in history:
-                    results.append(f"【自由】{title}\n🔗 {link}")
+                if keyword in title and link not in existing_links:
+                    new_found.append({"source": "自由", "title": title, "link": link})
                     add_to_notion(title, link, "自由")
-    return results
+                    
+    return new_found
 
-# --- 主要執行區塊 ---
+# --- 主程式 ---
 keyword = "軍事衝突"
-history_content = get_existing_history()
+old_news_list = get_existing_data()
+existing_links = {n['link'] for n in old_news_list}
 
-all_news = []
-all_news.extend(crawl_china_times(keyword, history_content))
-all_news.extend(crawl_ltn(keyword, history_content))
+# 執行爬蟲抓取新新聞
+new_news = crawl_news(keyword, existing_links)
 
-# 視覺化排版寫入檔案
-if all_news:
-    output = f"🕒 自動更新時間：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+# 合併新舊新聞，並重新寫入檔案 (達成消除重複的效果)
+total_news = old_news_list + new_news
+
+if new_news:
+    # 重新整理檔案內容
+    output = f"🕒 最後更新時間：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
     output += f"🔎 監控關鍵字：{keyword}\n"
     output += "="*30 + "\n\n"
-    output += "\n\n".join(all_news)
     
-    with open('result.txt', 'a', encoding='utf-8') as f:
+    # 只記錄最近的 50 筆，避免檔案無限長大
+    for news in total_news[-50:]:
+        output += f"【{news['source']}】{news['title']}\n🔗 {news['link']}\n\n"
+    
+    output += "▼"*30 + "\n\n"
+    
+    # 用 'w' (覆寫) 而不是 'a' (附加)，這樣才能「消除重複」並保持整潔
+    with open('result.txt', 'w', encoding='utf-8') as f:
         f.write(output)
-        # 加入美觀的分隔線
-        f.write("\n\n" + "▼"*30 + "\n\n")
+    print(f"✅ 成功抓取 {len(new_news)} 筆新新聞！")
 else:
-    print(f"{datetime.now().strftime('%H:%M:%S')} - 目前無新新聞。")
+    print("目前沒有新新聞，result.txt 保持不變。")
