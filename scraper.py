@@ -69,5 +69,8 @@ output += f"🔎 監控關鍵字：{keyword}\n"
 output += "="*30 + "\n\n"
 output += "\n\n".join(all_news)
 
-with open('result.txt', 'w', encoding='utf-8') as f:
+# 把原本的 'w' 改成 'a' (Append 附加模式)
+with open('result.txt', 'a', encoding='utf-8') as f:
     f.write(output)
+    # 多加一行分隔線，讓每次更新的紀錄在視覺上隔開來
+    f.write("\n" + "▼"*30 + "\n\n")
