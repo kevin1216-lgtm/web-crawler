@@ -37,7 +37,7 @@ def crawl_ltn(keyword):
     return results
 
 # 主程式
-keyword = "軍情動向"
+keyword = "軍事衝突"
 print(f"開始搜尋關鍵字：{keyword}")
 
 all_news = []
