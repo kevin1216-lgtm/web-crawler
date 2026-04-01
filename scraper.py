@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 
-keyword = "台灣"
+keyword = "軍事動向" 
 url = 'https://www.ptt.cc/bbs/Gossiping/index.html'
 headers = {'User-Agent': 'Mozilla/5.0'}
 cookies = {'over18': '1'}
