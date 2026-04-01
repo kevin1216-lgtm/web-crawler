@@ -4,7 +4,13 @@ import datetime
 
 def crawl_china_times(keyword):
     url = f"https://www.chinatimes.com/search/{keyword}?chdtv"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': 'https://www.google.com/',
+        'Connection': 'keep-alive'
+    }
     res = requests.get(url, headers=headers)
     results = []
     
@@ -29,7 +35,7 @@ def crawl_china_times(keyword):
         results.append(f"❌ 【中時】連線失敗，可能被網站阻擋了 (狀態碼: {res.status_code})")
         
     return results
-
+    
 def crawl_ltn(keyword):
     url = f"https://search.ltn.com.tw/list?keyword={keyword}"
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'}
