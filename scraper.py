@@ -78,8 +78,8 @@ def crawl_news(keyword, existing_links):
             if a_tag:
                 title = a_tag.text.strip()
                 link = a_tag.get('href')
-                    # 放寬標準：相信自由時報的搜尋結果，只要沒抓過 (不重複) 就收錄！
-                    if link not in existing_links:
+                # 放寬標準：相信自由時報的搜尋結果，只要沒抓過 (不重複) 就收錄！
+                if link not in existing_links:
                     new_found.append({"source": "自由", "title": title, "link": link})
                     add_to_notion(title, link, "自由")
                     
