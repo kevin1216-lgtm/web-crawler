@@ -76,6 +76,17 @@ def crawl_news(keyword, existing_links):
                     new_found.append({"source": "自由", "title": title, "link": link})
                     add_to_notion(title, link, "自由")
                     
+    bbc_url = f"https://news.google.com/rss/search?q=site:bbc.com/zhongwen+{keyword}&hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
+    res_bbc = requests.get(bbc_url, headers={'User-Agent': 'Mozilla/5.0'})
+    if res_bbc.status_code == 200:
+        soup = BeautifulSoup(res_bbc.text, 'xml')
+        for item in soup.find_all('item'):
+            title = item.title.text.split(" - ")[0]
+            link = item.link.text
+            if link not in existing_links:
+                new_found.append({"source": "BBC", "title": title, "link": link})
+                add_to_notion(title, link, "BBC")
+                    
     return new_found
 
 keyword = "軍事衝突"
