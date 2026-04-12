@@ -43,23 +43,25 @@ def generate():
             font_path=font,
             mask=m_arr,
             width=1000,
-            height=800,
+            height=1000,             # 稍微拉高一點比例，讓圖形有更多空間
             background_color='white',
-            max_words=1200,
-            max_font_size=70,
-            min_font_size=2,
+            max_words=3000,          # 🌟 暴力增加單字量，填滿縫隙
+            max_font_size=40,        # 🌟 強制最大字體變小 (你可以自己微調這個數字，越小字越密)
+            min_font_size=2,         # 允許字縮到極小
+            relative_scaling=0.1,    # 🌟 降低大字霸佔空間的比例，讓版面充滿均勻的小字
             colormap='inferno',
-            contour_width=1,
+            contour_width=1,         # 保留一點點史蒂夫的黑邊框
             contour_color='black'
         )
         out = wc.generate(words)
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(10, 10))
         plt.imshow(out, interpolation="bilinear")
         plt.axis("off")
         plt.savefig("wordcloud.png", bbox_inches='tight', pad_inches=0)
         plt.close()
-    except:
-        pass
+        print("✅ 高密度文字雲產生成功！")
+    except Exception as e:
+        print(f"⚠️ 文字雲產生失敗: {e}")
 
 if __name__ == "__main__":
     generate()
