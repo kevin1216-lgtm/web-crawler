@@ -16,16 +16,22 @@ jobs:
       with:
         python-version: '3.10'
 
-    - run: pip install requests beautifulsoup4 lxml
+    # 🌟 修改 1：安裝繪圖工具與中文字型 (避免文字雲變亂碼)
+    - name: Install dependencies and fonts
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y fonts-noto-cjk
+        pip install requests beautifulsoup4 lxml jieba wordcloud matplotlib
 
     - env:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         DATABASE_ID: ${{ secrets.DATABASE_ID }}
       run: python scraper.py
 
+    # 🌟 修改 2：加上 wordcloud.png 讓 GitHub 記得存這張圖片
     - run: |
         git config --global user.name "GitHub Action Bot"
         git config --global user.email "action@github.com"
-        git add result.txt
-        git commit -m "Auto-update result.txt" || exit 0
+        git add result.txt wordcloud.png
+        git commit -m "Auto-update result.txt and wordcloud" || exit 0
         git push
