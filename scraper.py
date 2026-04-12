@@ -4,6 +4,9 @@ import json
 import re
 from datetime import datetime
 from bs4 import BeautifulSoup
+import jieba
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 NOTION_TOKEN = os.environ.get("NOTION_TOKEN")
 DATABASE_ID = os.environ.get("DATABASE_ID")
@@ -89,15 +92,59 @@ def crawl_news(keyword, existing_links):
                     
     return new_found
 
+# 🌟 新增的函式：製作文字雲
+def generate_wordcloud(news_list):
+    if not news_list:
+        return
+    
+    # 將所有標題接在一起
+    all_titles = " ".join([news['title'] for news in news_list])
+    
+    # 結巴斷詞
+    words = jieba.cut(all_titles)
+    
+    # 過濾不要的常見字詞
+    stop_words = {"的", "了", "在", "是", "與", "和", "就", "也", "都", "不", "而", "有", "上", "將", "被", "會"}
+    filtered_words = " ".join([w for w in words if w not in stop_words and len(w) > 1])
+    
+    # 尋找 Ubuntu 的中文字型路徑
+    font_path = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
+    if not os.path.exists(font_path):
+        font_path = "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"
+        
+    try:
+        wc = WordCloud(
+            font_path=font_path,
+            width=1000, 
+            height=600,
+            background_color='white',
+            max_words=150,
+            colormap='inferno' # 使用火焰顏色的主題，符合軍事動盪感
+        )
+        wordcloud_img = wc.generate(filtered_words)
+        
+        plt.figure(figsize=(10, 6))
+        plt.imshow(wordcloud_img, interpolation="bilinear")
+        plt.axis("off")
+        # 存檔成 wordcloud.png
+        plt.savefig("wordcloud.png", bbox_inches='tight', pad_inches=0)
+        plt.close()
+        print("✅ 文字雲產生成功！")
+    except Exception as e:
+        print(f"⚠️ 文字雲產生失敗: {e}")
+
+# --- 主程式 ---
 keyword = "軍事衝突"
 old_news_list = get_existing_data()
 existing_links = {n['link'] for n in old_news_list}
 
 new_news = crawl_news(keyword, existing_links)
-
 total_news = new_news + old_news_list
 
+# 🌟 當有新新聞時，除了寫入 txt，順便重畫一張文字雲
 if new_news:
+    generate_wordcloud(total_news[:500])
+    
     output = f"🕒 最後更新時間：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
     output += f"🔎 監控關鍵字：{keyword}\n"
     output += "="*30 + "\n\n"
