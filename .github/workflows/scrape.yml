@@ -16,16 +16,26 @@ jobs:
       with:
         python-version: '3.10'
 
-    - run: pip install requests beautifulsoup4 lxml
+    # 準備工作：安裝爬蟲工具、畫圖工具與中文字體
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y fonts-noto-cjk
+        pip install requests beautifulsoup4 lxml jieba wordcloud matplotlib
 
+    # 任務一：叫爬蟲小弟去抓新聞
     - env:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         DATABASE_ID: ${{ secrets.DATABASE_ID }}
       run: python scraper.py
 
+    # 任務二：叫畫圖小妹讀取抓下來的新聞畫出文字雲
+    - run: python draw_cloud.py
+
+    # 任務三：把更新的文字檔與新畫的圖片一起存回 GitHub
     - run: |
         git config --global user.name "GitHub Action Bot"
         git config --global user.email "action@github.com"
-        git add result.txt
-        git commit -m "Auto-update result.txt" || exit 0
+        git add result.txt wordcloud.png
+        git commit -m "Auto-update result.txt and wordcloud" || exit 0
         git push
