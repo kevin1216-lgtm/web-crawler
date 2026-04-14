@@ -6,12 +6,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
+import os
+import re
+import jieba
+from wordcloud import WordCloud, ImageColorGenerator # 🌟 新增 ImageColorGenerator
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
+
+import os
+import re
+import jieba
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image
+
 def generate():
     f_path = 'result.txt'
     if not os.path.exists(f_path):
         return
 
-    # 讀取新聞文字
     with open(f_path, 'r', encoding='utf-8') as f:
         txt = f.read()
 
@@ -29,31 +44,46 @@ def generate():
     if not os.path.exists(font):
         font = "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"
 
-    # ==========================================
-    # 🖼️ 第一張圖：史蒂夫 (精細輪廓、高密度)
-    # ==========================================
-    m_path_1 = "mask.png"
-    if os.path.exists(m_path_1):
-        img1 = Image.open(m_path_1).convert("RGBA")
-        base1 = Image.new("RGBA", img1.size, (255, 255, 255, 255))
-        base1.paste(img1, (0, 0), img1)
-        m_arr_1 = np.where(np.array(base1.convert("L")) > 200, 255, 0)
+    m_path = "mask.png"
+    if os.path.exists(m_path):
+        img = Image.open(m_path).convert("RGBA")
+        base = Image.new("RGBA", img.size, (255, 255, 255, 255))
+        base.paste(img, (0, 0), img)
+        m_arr = np.array(base.convert("L"))
+        # 單純的黑白二值化，拿掉之前害史蒂夫斷頭的「手動挖空」代碼
+        m_arr = np.where(m_arr > 200, 255, 0)
+    else:
+        m_arr = None
+
+    try:
+        wc = WordCloud(
+            font_path=font,
+            mask=m_arr,
+            width=2000,              # 🌟 提高畫布解析度
+            height=2000,
+            background_color='white',
+            max_words=2000,          # 準備大量單字
+            max_font_size=110,       # 稍微壓制超級大字，避免撐破形狀
+            min_font_size=2,         
+            repeat=True,             # 允許單字重複填滿空隙
+            colormap='inferno',
+            contour_width=2,         # 🌟 救命關鍵：加上 2 像素的外框線！
+            contour_color='black'    # 🌟 用黑色框線把十字鎬和臉型勾勒出來
+        )
+        out = wc.generate(words)
         
-        try:
-            wc1 = WordCloud(
-                font_path=font, mask=m_arr_1, width=2000, height=2000,
-                background_color='white', max_words=2000, max_font_size=110, min_font_size=2,
-                repeat=True, colormap='inferno', contour_width=2, contour_color='black'
-            )
-            out1 = wc1.generate(words)
-            plt.figure(figsize=(15, 15))
-            plt.imshow(out1, interpolation="bilinear")
-            plt.axis("off")
-            plt.savefig("wordcloud.png", bbox_inches='tight', pad_inches=0, dpi=300)
-            plt.close()
-            print("✅ 第一張圖 (史蒂夫) 產生成功！")
-        except Exception as e:
-            print(f"⚠️ 第一張圖產生失敗: {e}")
+        plt.figure(figsize=(15, 15)) # 放大繪圖視窗
+        plt.imshow(out, interpolation="bilinear")
+        plt.axis("off")
+        # 🌟 DPI=300：強制輸出 4K 等級的超清晰圖片，絕對不糊！
+        plt.savefig("wordcloud.png", bbox_inches='tight', pad_inches=0, dpi=300)
+        plt.close()
+        print("✅ 超高畫質、帶輪廓線的文字雲產生成功！")
+    except Exception as e:
+        print(f"⚠️ 文字雲產生失敗: {e}")
+
+if __name__ == "__main__":
+    generate()
 
     # ==========================================
     # 🖼️ 第二張圖：星星圖 (頻率越大字越大、無黑框)
