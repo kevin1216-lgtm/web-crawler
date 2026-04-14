@@ -51,7 +51,7 @@ def generate():
             plt.figure(figsize=(20, 20))
             plt.imshow(out1, interpolation="bilinear")
             plt.axis("off")
-            plt.savefig("wordcloud.png", bbox_inches='tight', pad_inches=0, dpi=300)
+            plt.savefig("wordcloud_make.png", bbox_inches='tight', pad_inches=0, dpi=300)
             plt.close()
             print("✅ 史蒂夫高畫質版產生成功！")
         except Exception as e:
