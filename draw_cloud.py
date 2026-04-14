@@ -1,7 +1,7 @@
 import os
 import re
 import jieba
-from wordcloud import WordCloud
+from wordcloud import WordCloud, ImageColorGenerator # 🌟 新增導入 ImageColorGenerator
 import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
@@ -29,38 +29,54 @@ def generate():
         font = "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"
 
     # ==========================================
-    # 🖼️ 第一張圖：史蒂夫 (強制放大版)
+    # 🖼️ 第一張圖：史蒂夫 (🌟 3D 立體色彩映射版 🌟)
     # ==========================================
-    m_path_1 = "mask.png"
+    m_path_1 = "steve_color.png" # 👈 改為讀取你新上傳的「彩色版」史蒂夫
     if os.path.exists(m_path_1):
-        img1 = Image.open(m_path_1).convert("RGBA")
-        scale = 5
-        img1 = img1.resize((img1.width * scale, img1.height * scale), Image.LANCZOS)
+        color_img = Image.open(m_path_1).convert("RGBA")
         
-        base1 = Image.new("RGBA", img1.size, (255, 255, 255, 255))
-        base1.paste(img1, (0, 0), img1)
-        m_arr_1 = np.where(np.array(base1.convert("L")) > 200, 255, 0)
+        # 放大 5 倍保持高畫質
+        scale = 5
+        color_img = color_img.resize((color_img.width * scale, color_img.height * scale), Image.LANCZOS)
+        
+        # 建立白色底圖並貼上史蒂夫 (處理透明背景)
+        base1 = Image.new("RGBA", color_img.size, (255, 255, 255, 255))
+        base1.paste(color_img, (0, 0), color_img)
+        
+        # 1️⃣ 產生用於「萃取顏色」的陣列
+        color_array = np.array(base1)
+        
+        # 2️⃣ 產生用於「決定形狀」的黑白遮罩陣列
+        m_arr_1 = np.where(np.array(base1.convert("L")) > 240, 255, 0)
         
         try:
+            # 🌟 為了呈現 3D 細節，稍微調小字體，讓「像素點(文字)」更密集
             wc1 = WordCloud(
                 font_path=font, mask=m_arr_1, background_color='white',
-                max_words=4000, max_font_size=250, min_font_size=8,
-                repeat=True, colormap='inferno'
+                max_words=6000, max_font_size=120, min_font_size=4, 
+                repeat=True
+                # 這裡先把 colormap 拿掉，因為我們要用原圖顏色
             )
-            out1 = wc1.generate(words)
+            # 先畫出形狀
+            wc1.generate(words)
+            
+            # 🌟 終極魔法：根據原圖顏色重新上色 🌟
+            image_colors = ImageColorGenerator(color_array)
+            wc1.recolor(color_func=image_colors)
+            
             plt.figure(figsize=(20, 20))
-            plt.imshow(out1, interpolation="bilinear")
+            plt.imshow(wc1, interpolation="bilinear") # 注意這裡改成 wc1
             plt.axis("off")
-            plt.savefig("wordcloud_Steve.png", bbox_inches='tight', pad_inches=0, dpi=300)
+            plt.savefig("wordcloud.png", bbox_inches='tight', pad_inches=0, dpi=300)
             plt.close()
-            print("✅ 史蒂夫高畫質版產生成功！")
+            print("✅ 史蒂夫 3D 立體版產生成功！")
         except Exception as e:
             print(f"⚠️ 史蒂夫產生失敗: {e}")
 
     # ==========================================
-    # 🖼️ 第二張圖：🌟 星星版 🌟 (全面改名 star)
+    # 🖼️ 第二張圖：星星版 (維持不變)
     # ==========================================
-    m_path_2 = "mask_star.png"   # 👈 這裡改成讀取 star
+    m_path_2 = "mask_star.png"
     if os.path.exists(m_path_2):
         img2 = Image.open(m_path_2).convert("RGBA")
         scale = 5
@@ -80,7 +96,6 @@ def generate():
             plt.figure(figsize=(20, 20))
             plt.imshow(out2, interpolation="bilinear")
             plt.axis("off")
-            # 👈 這裡改成存成 wordcloud_star.png
             plt.savefig("wordcloud_star.png", bbox_inches='tight', pad_inches=0, dpi=300)
             plt.close()
             print("✅ 星星圖高畫質版產生成功！")
