@@ -6,22 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-import os
-import re
-import jieba
-from wordcloud import WordCloud, ImageColorGenerator # 🌟 新增 ImageColorGenerator
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image
-
-import os
-import re
-import jieba
-from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image
-
 def generate():
     f_path = 'result.txt'
     if not os.path.exists(f_path):
@@ -81,9 +65,6 @@ def generate():
         print("✅ 超高畫質、帶輪廓線的文字雲產生成功！")
     except Exception as e:
         print(f"⚠️ 文字雲產生失敗: {e}")
-
-if __name__ == "__main__":
-    generate()
 
     # ==========================================
     # 🖼️ 第二張圖：星星圖 (頻率越大字越大、無黑框)
