@@ -56,9 +56,9 @@ def generate():
             print(f"⚠️ 第一張圖產生失敗: {e}")
 
     # ==========================================
-    # 🖼️ 第二張圖：愛心圖 (頻率越大字越大、無黑框)
+    # 🖼️ 第二張圖：星星圖 (頻率越大字越大、無黑框)
     # ==========================================
-    m_path_2 = "mask_heart.png"
+    m_path_2 = "mask_star.png"
     if os.path.exists(m_path_2):
         img2 = Image.open(m_path_2).convert("RGBA")
         base2 = Image.new("RGBA", img2.size, (255, 255, 255, 255))
@@ -81,7 +81,7 @@ def generate():
             plt.axis("off")
             plt.savefig("wordcloud_heart.png", bbox_inches='tight', pad_inches=0, dpi=300)
             plt.close()
-            print("✅ 第二張圖 (愛心頻率圖) 產生成功！")
+            print("✅ 第二張圖 (星星頻率圖) 產生成功！")
         except Exception as e:
             print(f"⚠️ 第二張圖產生失敗: {e}")
     else:
