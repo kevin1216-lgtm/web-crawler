@@ -32,10 +32,10 @@ jobs:
     # 任務二：叫畫圖小妹讀取抓下來的新聞畫出文字雲
     - run: python draw_cloud.py
 
-    # 任務三：把更新的文字檔與新畫的圖片一起存回 GitHub
+    # 任務三：把更新的文字檔與「兩張」新畫的圖片一起存回 GitHub
     - run: |
         git config --global user.name "GitHub Action Bot"
         git config --global user.email "action@github.com"
-        git add result.txt wordcloud.png
-        git commit -m "Auto-update result.txt and wordcloud" || exit 0
+        git add result.txt wordcloud.png wordcloud_heart.png
+        git commit -m "Auto-update result.txt and wordclouds" || exit 0
         git push
