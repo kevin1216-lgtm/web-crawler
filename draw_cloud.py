@@ -78,7 +78,7 @@ def generate():
     # 🖼️ 第二張圖：星星 (強制放大 5 倍版)
     # ==========================================
     # 請上傳一張黑白星星剪影圖，命名為 mask_heart.png
-    m_path_2 = "mask_heart.png"
+    m_path_2 = "mask_star.png"
     if os.path.exists(m_path_2):
         img2 = Image.open(m_path_2).convert("RGBA")
         
@@ -116,7 +116,7 @@ def generate():
         except Exception as e:
             print(f"⚠️ 第二張圖產生失敗: {e}")
     else:
-        print("沒有找到 mask_heart.png，跳過第二張圖的繪製。")
+        print("沒有找到 mask_star.png，跳過第二張圖的繪製。")
 
 if __name__ == "__main__":
     generate()
