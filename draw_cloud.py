@@ -40,7 +40,7 @@ def generate():
         
         # 製作黑白遮罩用於排版 (史蒂夫區域為黑，背景為白)
         m_arr = np.array(base.convert("L"))
-        m_arr = np.where(m_arr > 200, 0, 255)
+        m_arr = np.where(m_arr > 200, 255, 0)
         
         # 🌟 2. 給史蒂夫一張臉 (手動將臉部特徵區域變為白色，不可塞字) 🌟
         # 這需要根據你圖片的解析度手動微調坐標。以下是一組預估坐標。
