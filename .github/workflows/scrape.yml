@@ -36,6 +36,6 @@ jobs:
     - run: |
         git config --global user.name "GitHub Action Bot"
         git config --global user.email "action@github.com"
-        git add result.txt wordcloud_mask.png wordcloud_star.png
+        git add result.txt wordcloud_Steve.png wordcloud_star.png
         git commit -m "Auto-update result.txt and wordclouds" || exit 0
         git push
