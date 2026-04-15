@@ -2,7 +2,7 @@ name: Auto News Scraper
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '17 * * * *'  # 👈 已經修改為每小時的第 17 分鐘執行，避開整點塞車！
   workflow_dispatch:
 
 jobs:
@@ -32,12 +32,11 @@ jobs:
     # 任務二：叫畫圖小妹讀取抓下來的新聞畫出文字雲
     - run: python draw_cloud.py
 
-   # 任務三：把更新的文字檔與「output資料夾」一起存回 GitHub
+    # 任務三：把更新的文字檔與「output資料夾」一起存回 GitHub
     - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Action Bot"
         git config --global user.email "action@github.com"
-        # 這裡最關鍵！要把個別的檔名刪掉，改成資料夾路徑
         git add result.txt output/
         git commit -m "Auto-update news and images in folders" || exit 0
         git push
